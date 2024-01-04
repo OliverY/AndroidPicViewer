@@ -14,8 +14,6 @@ import androidx.compose.ui.window.application
 @Composable
 @Preview
 fun App() {
-    var text by remember { mutableStateOf("Hello, World!") }
-
     MaterialTheme {
         ADBControllerPanel()
     }
