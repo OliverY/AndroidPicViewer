@@ -20,7 +20,7 @@ dependencies {
     // (in a separate module for demo project and in testMain).
     // With compose.desktop.common you will also lose @Preview functionality
     implementation(compose.desktop.currentOs)
-    implementation("dev.mobile:dadb:1.2.7")
+    // implementation("dev.mobile:dadb:1.2.7")
 }
 
 compose.desktop {
