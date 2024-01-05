@@ -10,31 +10,18 @@ import java.util.zip.ZipInputStream
 
 object DownUtils {
 
-    fun downloadZipAndExtractFile(url:String,destPath:String){
-        val connection = URL(url).openConnection()
-        val inputStream = connection.getInputStream()
-        val zipInputStream = ZipInputStream(BufferedInputStream(inputStream))
+    fun downloadFile(url: String, destinationDirectory: String) {
+        val fileName = url.substringAfterLast("/")
+        val outputFile = File(destinationDirectory, fileName)
 
-        var entry: ZipEntry? = zipInputStream.nextEntry
-        while (entry!=null){
-            val entryPath = "$destPath/${entry.name}"
-
-            if(entry.isDirectory){
-                File(entryPath).mkdirs()
-            }else{
-                val outputStream = BufferedOutputStream(FileOutputStream(entryPath))
+        BufferedInputStream(URL(url).openStream()).use { inputStream ->
+            FileOutputStream(outputFile).use { outputStream ->
                 val buffer = ByteArray(1024)
-                var count: Int
-
-                while (zipInputStream.read(buffer).also { count = it } != -1){
-                    outputStream.write(buffer,0,count)
+                var bytesRead: Int
+                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                    outputStream.write(buffer, 0, bytesRead)
                 }
-
-                outputStream.close()
             }
-            zipInputStream.closeEntry()
-            entry = zipInputStream.nextEntry
         }
-        zipInputStream.close()
     }
 }

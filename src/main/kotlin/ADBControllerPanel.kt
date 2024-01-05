@@ -21,6 +21,7 @@ import bean.PicBean
 import utils.CommonPathUtils
 import utils.DownUtils
 import utils.RegexUtils
+import utils.UnzipUtils
 import java.io.*
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -75,21 +76,21 @@ fun Content(){
                 Text("手机截图并发送到PC")
             }
         }
-        //    TextField(
-        //        value = textShow.value,
-        //        onValueChange = { newText ->
-        //            textShow.value = newText },
-        //        label = {
-        //            Text("输入点啥")
-        //        }
-        //    )
-        //    Button(onClick = {
-        //          test(textShow)
-        //        checkAdbExist()
-        //    // sendCommandLine(textShow,ANDROID_HOME)
-        //    }) {
-        //        Text("test")
-        //    }
+       //   TextField(
+       //       value = textShow.value,
+       //       onValueChange = { newText ->
+       //           textShow.value = newText },
+       //       label = {
+       //           Text("输入点啥")
+       //       }
+       //   )
+       //   Button(onClick = {
+       //       download()
+       //       // test(textShow)
+       //   // sendCommandLine(textShow,ANDROID_HOME)
+       //   }) {
+       //       Text("test")
+       //   }
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
             modifier = Modifier.fillMaxSize().background(color = Color.Gray),
@@ -106,13 +107,25 @@ fun Content(){
 fun checkAdbExist(initOK: MutableState<Boolean>){
     val HOME_PATH = System.getenv("HOME")
     val downloadPath = "$HOME_PATH/Library/Android/sdk"
+    if(!File(downloadPath).exists()){
+        File(downloadPath).mkdirs()
+    }
+
     val adbFile = File("$downloadPath/platform-tools","adb")
     if(!adbFile.exists()){
         // 下载adb
         println("没有adb，去下载")
 
-        DownUtils.downloadZipAndExtractFile("https://dl.google.com/android/repository/platform-tools-latest-darwin.zip",downloadPath)
-        println("下载解压好了 adb")
+        val fileUrl = "https://dl.google.com/android/repository/platform-tools-latest-darwin.zip"
+        val destinationDir = "$HOME_PATH/Library/Android/sdk"
+        try {
+            download(fileUrl, destinationDir)
+            println("platform-tools 下载完毕")
+            unzip(fileUrl,destinationDir)
+            println("platform-tools 解压缩完毕")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         initOK.value = true
     }else{
         // 初始化成功
@@ -344,11 +357,14 @@ fun downloadPicToPc(path: String) {
     }
 }
 
-fun test(ip: MutableState<String>) {
-    tryCatch {
-        val time = SimpleDateFormat("YYYY_MM_DD_HH_mm_ss").format(Date())
-        println(time)
-    }
+fun download(fileUrl: String, destinationDir: String){
+    DownUtils.downloadFile(fileUrl, destinationDir)
+}
+
+fun unzip(fileUrl: String, destinationDir: String){
+    val fileName = fileUrl.substringAfterLast("/")
+    val zipFilePath = "$destinationDir/$fileName"
+    UnzipUtils.runUnzipCommand(zipFilePath, destinationDir)
 }
 
 fun tryCatch(action: () -> Unit) {
