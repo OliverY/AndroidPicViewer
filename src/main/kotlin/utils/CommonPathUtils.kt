@@ -9,4 +9,15 @@ object CommonPathUtils {
             return adbPath
         }
 
+    val SCREEN_SHOT_PATH_1 = "/sdcard/Pictures/Screenshots/"
+    val SCREEN_SHOT_PATH_2 = "/sdcard/DCIM/Screenshots/"
+
+    var screenShotPath: String = SCREEN_SHOT_PATH_1
+        set(value){
+            field = value
+        }
+        get() {
+            return field
+        }
+
 }

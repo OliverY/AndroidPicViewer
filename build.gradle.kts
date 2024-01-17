@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "cn.yxj"
-version = "1.0-SNAPSHOT"
+version = "1.1"
 
 repositories {
     mavenCentral()
@@ -38,7 +38,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Android图片查看器"
-            packageVersion = "1.0.0"
+            packageVersion = "1.1.0"
         }
     }
 }

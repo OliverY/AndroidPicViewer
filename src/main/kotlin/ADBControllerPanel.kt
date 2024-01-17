@@ -62,6 +62,7 @@ fun Content(){
     Column {
         Row(modifier = Modifier.padding(horizontal = 12.dp).fillMaxWidth()) {
             Button(modifier = Modifier.weight(1f), onClick = {
+                findScreenShotPath()
                 picList.clear()
                 listScreenShotPictures(picList)
             }) {
@@ -143,8 +144,7 @@ fun PicItem(pic: PicBean) {
     val appName = "Android图片查看器"
 
     val privateDir = "$appSupportDir/$appName"
-    val imageFolder = File(privateDir)
-    val imageFile = File(imageFolder, pic.fileName)
+    val imageFile = File(privateDir, pic.fileName)
     val imageBitmap = loadImageBitmap(FileInputStream(imageFile))
     Box(
         modifier = Modifier.fillMaxWidth().wrapContentWidth()
@@ -173,10 +173,43 @@ fun PicItem(pic: PicBean) {
     }
 }
 
+fun findScreenShotPath(){
+    try {
+        val processBuilder =
+            ProcessBuilder("${CommonPathUtils.adbPath}/adb", "shell", "test", "-d", CommonPathUtils.SCREEN_SHOT_PATH_1,"&&","echo","yes","||","echo","no")
+
+        // adb shell test -d /sdcard/A && echo yes || echo no
+
+        val currentPath = System.getProperty("user.dir")
+        processBuilder.directory(File(currentPath))
+        val process = processBuilder.start()
+
+        val reader = BufferedReader(InputStreamReader(process.inputStream))
+        var line: String?
+        while ((reader.readLine().also { line = it }) != null) {
+            println(line)
+            if("yes".equals(line)){
+                CommonPathUtils.screenShotPath = CommonPathUtils.SCREEN_SHOT_PATH_1
+                break
+            }else if("no".equals(line)){
+                CommonPathUtils.screenShotPath = CommonPathUtils.SCREEN_SHOT_PATH_2
+                break
+            }
+        }
+        reader.close()
+        val exitCode = process.waitFor()
+        println("命令执行完成，退出码：$exitCode")
+    } catch (e: IOException) {
+        throw RuntimeException(e)
+    } catch (e: InterruptedException) {
+        throw RuntimeException(e)
+    }
+}
+
 fun listScreenShotPictures(picList: MutableList<PicBean>) {
     try {
         val processBuilder =
-            ProcessBuilder("${CommonPathUtils.adbPath}/adb", "shell", "ls", "cd", "/sdcard/DCIM/Screenshots", "ls", "-l")
+            ProcessBuilder("${CommonPathUtils.adbPath}/adb", "shell", "ls", "cd", CommonPathUtils.screenShotPath, "ls", "-l")
 
         val currentPath = System.getProperty("user.dir")
         processBuilder.directory(File(currentPath))
@@ -192,8 +225,10 @@ fun listScreenShotPictures(picList: MutableList<PicBean>) {
                 val picBean = makePicBean(line!!)
                 picBean?.let { pic ->
                     println(pic)
-                    picList.add(pic)
-                    downloadPicToPc(pic.fileName)
+                    if(pic.fileName.isNotBlank()){
+                        picList.add(pic)
+                        downloadPicToPc(pic.fileName)
+                    }
                 }
             }
         }
@@ -212,7 +247,7 @@ fun screenShot() {
     try {
         val time = SimpleDateFormat("YYYY_MM_DD_HH_mm_ss").format(Date())
         val fileName = "Screenshot_${time}.jpg"
-        val screenShotDir = "/sdcard/DCIM/Screenshots/"
+        val screenShotDir = CommonPathUtils.screenShotPath
         val processBuilder =
             ProcessBuilder("${CommonPathUtils.adbPath}/adb", "shell", "screencap", "-p", "${screenShotDir}${fileName}")
 
@@ -338,7 +373,7 @@ fun downloadPicToPc(path: String) {
         }
 
         val processBuilder =
-            ProcessBuilder("${CommonPathUtils.adbPath}/adb", "pull", "/sdcard/DCIM/Screenshots/${path}", "$privateDir/${path}")
+            ProcessBuilder("${CommonPathUtils.adbPath}/adb", "pull", "${CommonPathUtils.screenShotPath}${path}", "$privateDir/${path}")
         processBuilder.directory(File(currentPath))
         val process = processBuilder.start()
 
